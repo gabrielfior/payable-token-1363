@@ -1,6 +1,7 @@
 # Compiler files
 cache/
 out/
+.github/*
 
 # Ignores development broadcast logs
 !/broadcast
@@ -9,6 +10,8 @@ out/
 
 # Docs
 docs/
+
+lib/**/*
 
 # Dotenv file
 .env
