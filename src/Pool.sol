@@ -7,27 +7,22 @@ import "./ERC1363Token.sol";
 import "forge-std/console.sol";
 import {UD60x18, ud, convert} from "@prb/math/UD60x18.sol";
 
-/*
-- ERC1363: Token sale/buy contract with a linear bonding curve:
-Token should use ERC1363
-- When a user sends ETH to the contract with ERC1363 it should trigger the receive function and mint the correct amount of tokens
-- When a user sends the token back to the contract it should return the correct amount of eth
 
-
-*/
-
+// ToDo - Inherit from ERC20, mint
 contract Pool is ERC1363Payable {
     LinearBondingCurve public bondingCurve;
+    ERC1363Token private tokenToMint;
 
     event Received(address indexed from, uint256 amount);
 
-    constructor(ERC1363Token _acceptedToken, LinearBondingCurve _bondingCurve) ERC1363Payable(_acceptedToken) {
+    constructor(IERC1363 _acceptedToken, LinearBondingCurve _bondingCurve, ERC1363Token tokenToMint_)
+        ERC1363Payable(_acceptedToken)
+    {
         bondingCurve = _bondingCurve;
+        tokenToMint = tokenToMint_;
     }
 
     function _transferReceived(address operator, address sender, uint256 amount, bytes memory data) internal override {
-        // Todo - Fixed point math
-        // ToDo - totalSupply is affected by other calls from LP tokens, hence pool must be owner.
         uint256 ethPriceInERC1363Token = bondingCurve.getPrice(acceptedToken().totalSupply());
         uint256 ethToTransfer = ethPriceInERC1363Token * amount;
         (bool sent, bytes memory data) = address(sender).call{value: ethToTransfer}("");
@@ -45,7 +40,6 @@ contract Pool is ERC1363Payable {
         uint256 tokensToTransfer = convert(ud60MsgValue);
         console.log("tokensToTransfer", tokensToTransfer);
         // ToDo - mint tokens to address
-        //acceptedToken().mint(msg.sender, tokensToTransfer);
-        //acceptedToken().dummy();
+        tokenToMint.mint(msg.sender, tokensToTransfer);
     }
 }

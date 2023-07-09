@@ -19,9 +19,12 @@ contract ContractBTest is Test {
     address bob = address(2);
 
     function setUp() public {
+        vm.prank(alice);
         erc1363token = new ERC1363Token("a","b");
+        console.log("balance sender", erc1363token.balanceOf(alice));
         bondingCurve = new LinearBondingCurve(1,0);
-        pool = new Pool(erc1363token, bondingCurve);
+        pool = new Pool(erc1363token, bondingCurve, erc1363token);
+        // Init Pool's balance of 100 LP tokens, instead of minting
     }
 
     function testSendEther_triggersReceive() public {
@@ -35,28 +38,29 @@ contract ContractBTest is Test {
         address(pool).call{value: amountInWei}("");
 
         // ToDo - Assert tokens were received
+        uint256 expectedBalance = amountInWei / totalSupply;
         // ToDo - Get amount from price
-        assertEq(erc1363token.balanceOf(alice), 25);
+        assertEq(erc1363token.balanceOf(alice), expectedBalance);
     }
 
-    // function testSendERC1363_eventEmitted() public {
-    //     uint256 erc1363TokensForBob = 10;
-    //     vm.deal(address(pool), 1 ether);
-    //     deal(address(erc1363token), bob, erc1363TokensForBob, true);
-    //     console.log("total supply", erc1363token.totalSupply());
-    //     console.log("balance1", erc1363token.balanceOf(bob));
+    function testSendERC1363_eventEmitted() public {
+        uint256 erc1363TokensForBob = 10;
+        vm.deal(address(pool), 1 ether);
+        deal(address(erc1363token), bob, erc1363TokensForBob, true);
+        console.log("total supply", erc1363token.totalSupply());
+        console.log("balance1", erc1363token.balanceOf(bob));
 
-    //     vm.startPrank(bob);
-    //     erc1363token.approve(address(pool), erc1363TokensForBob);
+        vm.startPrank(bob);
+        erc1363token.approve(address(pool), erc1363TokensForBob);
 
-    //     vm.expectEmit(true, true, false, true);
-    //     emit TokensReceived(bob, bob, erc1363TokensForBob, "");
-    //     erc1363token.transferAndCall(address(pool), erc1363TokensForBob);
+        vm.expectEmit(true, true, false, true);
+        emit TokensReceived(bob, bob, erc1363TokensForBob, "");
+        erc1363token.transferAndCall(address(pool), erc1363TokensForBob);
 
-    //     // We should get ETH back
-    //     uint256 expectedEthReturned = erc1363TokensForBob * erc1363token.totalSupply();
-    //     assertEq(bob.balance, expectedEthReturned);
+        // We should get ETH back
+        uint256 expectedEthReturned = erc1363TokensForBob * erc1363token.totalSupply();
+        assertEq(bob.balance, expectedEthReturned);
 
-    //     vm.stopPrank();
-    // }
+        vm.stopPrank();
+    }
 }
