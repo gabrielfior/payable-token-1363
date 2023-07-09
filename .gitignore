@@ -11,7 +11,5 @@ out/
 # Docs
 docs/
 
-lib/**/*
-
 # Dotenv file
 .env

@@ -34,7 +34,8 @@ contract PoolTest is Test {
 
     function testSendEther_triggersReceive() public {
         uint256 amountInWei = 0.01 ether;
-        // increase supply of poolToken by sending it to random address, so that we have a tokenPrice > 0 in linearBondingCurve
+        // Increase supply of poolToken by sending it to random address, so that we have a tokenPrice > 0 in linearBondingCurve
+        // We could also have the pool mint it to a diff user, but we wanted to test only the receive function.
         uint256 totalSupply = 10;
         deal(address(poolToken), address(3), totalSupply, true);
         hoax(alice, amountInWei);
@@ -43,7 +44,6 @@ contract PoolTest is Test {
         (bool sent, ) = address(pool).call{value: amountInWei}("");
         require(sent, "Failed to send Ether");
         
-
         uint256 expectedBalance = amountInWei / (totalSupply * m);
         assertEq(poolToken.balanceOf(alice), expectedBalance);
     }
